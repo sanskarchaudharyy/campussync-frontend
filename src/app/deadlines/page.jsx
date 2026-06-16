@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
-
-const API = "https://campussync-backend-1.onrender.com/api";
+import api from "@/lib/axios";
 
 export default function DeadlinesPage() {
   const [deadlines, setDeadlines] = useState([]);
@@ -14,13 +12,9 @@ export default function DeadlinesPage() {
 
   useEffect(() => { fetchDeadlines(); }, []);
 
-  const getToken = () => localStorage.getItem("token");
-
   const fetchDeadlines = async () => {
     try {
-      const res = await axios.get(`${API}/deadlines`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await api.get("/deadlines");
       setDeadlines(res.data);
     } catch (error) {
       console.error("Error fetching deadlines:", error);
@@ -31,9 +25,7 @@ export default function DeadlinesPage() {
     if (!title.trim() || !dueDate) return alert("Title and due date are required");
     try {
       setAdding(true);
-      await axios.post(`${API}/deadlines`, { title, description, dueDate }, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      await api.post("/deadlines", { title, description, dueDate });
       setTitle("");
       setDescription("");
       setDueDate("");
@@ -47,22 +39,18 @@ export default function DeadlinesPage() {
 
   const deleteDeadline = async (deadlineId) => {
     try {
-      await axios.delete(`${API}/deadlines/${deadlineId}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      await api.delete(`/deadlines/${deadlineId}`);
       fetchDeadlines();
     } catch (error) {
       console.error("Error deleting deadline:", error);
     }
   };
 
-  // Days remaining helper
   const getDaysLeft = (dueDate) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const due = new Date(dueDate);
-    const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-    return diff;
+    return Math.ceil((due - today) / (1000 * 60 * 60 * 24));
   };
 
   const getUrgencyStyle = (daysLeft) => {
@@ -77,63 +65,38 @@ export default function DeadlinesPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-10">
-
-      {/* Page Header */}
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-gray-900">Deadlines 📅</h1>
         <p className="mt-2 text-gray-500">Keep track of important assignments and exams.</p>
       </div>
 
-      {/* Add Deadline Form */}
       <div className="mb-12 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
         <h2 className="text-2xl font-semibold text-gray-900 mb-6">Add New Deadline</h2>
-
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-            <input
-              type="text"
-              placeholder="e.g. DSA Assignment 3"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className={inputClass}
-            />
+            <input type="text" placeholder="e.g. DSA Assignment 3" value={title}
+              onChange={(e) => setTitle(e.target.value)} className={inputClass} />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
-            <textarea
-              placeholder="Any additional details..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className={inputClass}
-            />
+            <textarea placeholder="Any additional details..." value={description}
+              onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className={inputClass}
-            />
+            <input type="date" value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
           </div>
-
           <div className="sm:col-span-2">
-            <button
-              onClick={createDeadline}
-              disabled={adding}
-              className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button onClick={createDeadline} disabled={adding}
+              className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
               {adding ? "Adding..." : "📌 Add Deadline"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Deadlines List */}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-gray-900">Upcoming Deadlines</h2>
         <span className="text-sm text-gray-400">{deadlines.length} deadline{deadlines.length !== 1 ? "s" : ""}</span>
@@ -151,37 +114,22 @@ export default function DeadlinesPage() {
             const daysLeft = getDaysLeft(deadline.dueDate);
             const urgency = getUrgencyStyle(daysLeft);
             return (
-              <div
-                key={deadline._id}
-                className="group rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-xl hover:-translate-y-1"
-              >
-                {/* Urgency Badge */}
+              <div key={deadline._id}
+                className="group rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-xl hover:-translate-y-1">
                 <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold mb-3 ${urgency.badge}`}>
                   ⏰ {urgency.label}
                 </span>
-
-                {/* Title */}
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{deadline.title}</h3>
-
-                {/* Description */}
                 {deadline.description && (
                   <p className="text-sm text-gray-500 mb-4 line-clamp-2">{deadline.description}</p>
                 )}
-
-                {/* Due Date */}
                 <p className="text-sm font-medium text-gray-600 mb-6">
                   📅 {new Date(deadline.dueDate).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
+                    day: "numeric", month: "short", year: "numeric",
                   })}
                 </p>
-
-                {/* Delete Button */}
-                <button
-                  onClick={() => deleteDeadline(deadline._id)}
-                  className="w-full rounded-xl border-2 border-red-400 py-2 text-sm font-semibold text-red-500 transition-all hover:bg-red-500 hover:text-white active:scale-95"
-                >
+                <button onClick={() => deleteDeadline(deadline._id)}
+                  className="w-full rounded-xl border-2 border-red-400 py-2 text-sm font-semibold text-red-500 transition-all hover:bg-red-500 hover:text-white active:scale-95">
                   Delete
                 </button>
               </div>
