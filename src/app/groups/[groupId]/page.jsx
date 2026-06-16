@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
 
 export default function GroupChatPage() {
@@ -14,20 +14,15 @@ export default function GroupChatPage() {
   const [text, setText] = useState("");
 
   useEffect(() => {
-    fetchMessages();
-  }, []);
+    if (groupId) {
+      fetchMessages();
+    }
+  }, [groupId]);
 
   const fetchMessages = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get(
-        `http://localhost:5000/api/messages/${groupId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const res = await api.get(
+        `/messages/${groupId}`
       );
 
       setMessages(res.data);
@@ -46,17 +41,10 @@ export default function GroupChatPage() {
         return;
       }
 
-      const token = localStorage.getItem("token");
-
-      await axios.post(
-        `http://localhost:5000/api/messages/${groupId}`,
+      await api.post(
+        `/messages/${groupId}`,
         {
           text,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
 
@@ -112,7 +100,7 @@ export default function GroupChatPage() {
 
           messages.map((message) => {
             const isMe =
-              message.sender.name ===
+              message.sender?.name ===
               user?.name;
 
             return (
@@ -141,7 +129,8 @@ export default function GroupChatPage() {
                         : "text-gray-500"
                     }`}
                   >
-                    {message.sender.name}
+                    {message.sender?.name ||
+                      "Unknown"}
                   </p>
 
                   <p className="mt-2 break-words">
