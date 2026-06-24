@@ -24,8 +24,8 @@ export default function RegisterPage() {
   };
 
   const fields = [
-    { key: "name", label: "Full Name", placeholder: "Sanskar Gupta", type: "text" },
-    { key: "email", label: "Email", placeholder: "you@college.edu", type: "email" },
+    { key: "name", label: "Full Name", placeholder: "Enter your full name...", type: "text" },
+    { key: "email", label: "Email", placeholder: "Enter your college domain mail", type: "email" },
     { key: "password", label: "Password", placeholder: "••••••••", type: "password" },
     { key: "branch", label: "Branch", placeholder: "e.g. CSE, ECE", type: "text" },
     { key: "year", label: "Year", placeholder: "e.g. 2nd Year", type: "text" },
